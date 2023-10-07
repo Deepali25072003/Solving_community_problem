@@ -1,0 +1,36 @@
+import urllib.request
+from bs4 import BeautifulSoup
+
+def scrape_food_banks(city):
+    # Construct the URL based on the user's city
+    url = f"https://example.com/foodbanks/{city}"
+
+    try:
+        # Open the URL and read its content
+        with urllib.request.urlopen(url) as response:
+            html = response.read()
+
+            # Parse the HTML using BeautifulSoup
+            soup = BeautifulSoup(html, 'html.parser')
+
+            # Extract information about food banks
+            food_banks = soup.find_all('div', class_='food-bank-info')
+
+            if not food_banks:
+                print("No food banks found in this city.")
+            else:
+                print(f"Food banks in {city}:")
+                for i, bank in enumerate(food_banks):
+                    name = bank.find('h2').text.strip()
+                    address = bank.find('p', class_='address').text.strip()
+                    print(f"{i + 1}. {name} - {address}")
+
+    except Exception as e:
+        print(f"Failed to scrape data: {e}")
+
+def main():
+    user_city = input("Enter the city in India: ")
+    scrape_food_banks(user_city)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,64 @@
+from flask import Flask, render_template, request, redirect, url_for, flash
+from datetime import datetime, time
+import sqlite3
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+
+# Create a SQLite database for storing donations
+conn = sqlite3.connect('donations.db')
+conn.execute('''CREATE TABLE IF NOT EXISTS donations
+                (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                restaurant_name TEXT,
+                food_description TEXT,
+                donation_time TIME,
+                food_bank_name TEXT)''')
+conn.close()
+
+# Home page
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+# Donation form submission
+@app.route('/donate', methods=['POST'])
+def donate():
+    if request.method == 'POST':
+        restaurant_name = request.form['restaurant_name']
+        food_description = request.form['food_description']
+        donation_time = request.form['donation_time']
+        food_bank_name = find_nearest_food_bank(request.form['city'])
+
+        if not is_valid_donation_time(donation_time):
+            flash('Donation must be scheduled after 9 pm.')
+            return redirect(url_for('home'))
+
+        conn = sqlite3.connect('donations.db')
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO donations (restaurant_name, food_description, donation_time, food_bank_name) VALUES (?, ?, ?, ?)",
+                       (restaurant_name, food_description, donation_time, food_bank_name))
+        conn.commit()
+        conn.close()
+
+        flash('Your donation has been scheduled!')
+        return redirect(url_for('home'))
+
+# Function to check if donation time is after 9 pm
+def is_valid_donation_time(donation_time):
+    try:
+        donation_time = datetime.strptime(donation_time, '%H:%M').time()
+        return donation_time >= time(21, 0)
+    except ValueError:
+        return False
+
+# Function to find the nearest food bank (simplified)
+def find_nearest_food_bank(city):
+    # In a real application, you'd use a more sophisticated method to find the nearest food bank.
+    # This is a simplified example.
+    if city == 'SampleCity':
+        return 'Sample Food Bank'
+    else:
+        return 'No nearby food bank found'
+
+if __name__ == '__main__':
+    app.run(debug=True)

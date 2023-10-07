@@ -1,0 +1,42 @@
+import requests
+
+def find_restaurants(api_key, city):
+    # Define the base URL for the Google Places API
+    base_url = "https://maps.googleapis.com/maps/api/place/textsearch/json?"
+
+    # Define the search query for restaurants in the city
+    query = f"restaurants in {city}"
+
+    # Set up parameters for the API request
+    params = {
+        "query": query,
+        "key": api_key
+    }
+
+    # Send the API request
+    response = requests.get(base_url, params=params)
+    
+    # Check if the request was successful
+    if response.status_code == 200:
+        data = response.json()
+        return data.get("results", [])
+    else:
+        print("Failed to fetch data from Google Places API.")
+        return []
+
+def main():
+    api_key = "YOUR_GOOGLE_API_KEY"  # Replace with your Google API key
+    city = input("Enter the city in India: ")
+
+    # Find restaurants in the specified city
+    restaurants = find_restaurants(api_key, city)
+
+    if not restaurants:
+        print(f"No restaurants found in {city}.")
+    else:
+        print(f"Restaurants in {city}:")
+        for i, restaurant in enumerate(restaurants):
+            print(f"{i + 1}. {restaurant['name']} - {restaurant['formatted_address']}")
+
+if __name__ == "__main__":
+    main()
